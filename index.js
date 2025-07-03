@@ -47,31 +47,32 @@ function validateSignupInput(user_id, password) {
 }
 
 app.post('/signup', (req, res) => {
-    const {user_id, password} = req.body;
+    const { user_id, password } = req.body;
     const validation = validateSignupInput(user_id, password);
 
-    if (!validation.valid){
+    if (!validation.valid) {
         return res.status(400).json({
             message: 'Account creation failed',
             cause: validation.cause
         });
     }
 
-    db.get('SELECT * FROM users WHERE user_id = ?', [user_id], (err, row) =>{
-        if(row){
+    db.get('SELECT * FROM users WHERE user_id = ?', [user_id], (err, row) => {
+        if (row) {
             return res.status(400).json({
                 message: 'Account creation failed',
-                cause: 'Already same user_id is used'
+                cause: 'Account with same user_id already exists'
             });
         }
 
         const nickname = user_id;
 
-        db.run('INSERT INTO users (user_id, password, nickname, comment) VALUES (?, ?, ?, ?'),
+        db.run(
+            'INSERT INTO users (user_id, password, nickname, comment) VALUES (?, ?, ?, ?)',
             [user_id, password, nickname, ''],
             (err) => {
-                if(err){
-                    return res.status(500).json({message: 'Internal server error'});
+                if (err) {
+                    return res.status(500).json({ message: 'Internal server error' });
                 }
 
                 res.status(200).json({
