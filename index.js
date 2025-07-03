@@ -46,7 +46,7 @@ function validateSignupInput(user_id, password) {
     return {valid: true};
 }
 
-add.post('/signup', (req, res) => {
+app.post('/signup', (req, res) => {
     const {user_id, password} = req.body;
     const validation = validateSignupInput(user_id, password);
 
@@ -88,7 +88,7 @@ add.post('/signup', (req, res) => {
 
 const atob = (base64) => Buffer.from(base64, 'base64').toString('utf-8');
 
-add.get('/users/:user_id', (req, res) =>{
+app.get('/users/:user_id', (req, res) =>{
     const user_id = req.params.use_id;
     const authHeader = req.headers.authorization;
 
@@ -120,7 +120,7 @@ add.get('/users/:user_id', (req, res) =>{
     });
 });
 
-add.patch('/users/:user_id', (req, res) =>{
+app.patch('/users/:user_id', (req, res) =>{
     const user_id = req.params.use_id;
     const authHeader = req.headers.authorization;
 
@@ -218,8 +218,7 @@ add.patch('/users/:user_id', (req, res) =>{
     });
 });
 
-add.post('/close', (req, res) => {
-    const {user_id, password} = req.body;
+app.post('/close', (req, res) => {
     const authHeader = req.headers.authorization;
 
     if(!authHeader || !authHeader.startsWith('Basic ')){
@@ -234,20 +233,18 @@ add.post('/close', (req, res) => {
         return res.status(401).json({message: 'Authentication failed'});
     }
 
-    if(auth_user_id !== user_id){
-        return res.status(403).json({message: 'No permission for update'})
-    }
-
     db.get('SELECT * FROM users WHERE user_id = ?', [user_id], (err, row) =>{
-        if(!row){
-            return res.status(400).json({
-                message: 'Account creation failed',
-                cause: 'Already same user_id is used'
+        if(!row || row.password !== password){
+            return res.status(401).json({
+                message: 'Authentication failed',
             });
         }
 
-        db.run('INSERT INTO users (user_id, password, nickname, comment) VALUES (?, ?, ?, ?',
-            [user_id, password, nickname, ''],
+        db.run('DELETE FROM users WHERE user_id = ?', [user_id], function(err){
+            if (err) return res.status(500).json({message: 'Internal server error'});
+
+            res.status(200).json({message: 'Account and user successfully removed'});
+        }
         );
     });
 });
