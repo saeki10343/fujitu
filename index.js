@@ -58,7 +58,7 @@ app.post('/signup', (req, res) => {
     }
 
     db.get('SELECT * FROM users WHERE user_id = ?', [user_id], (err, row) =>{
-        if(!row){
+        if(row){
             return res.status(400).json({
                 message: 'Account creation failed',
                 cause: 'Already same user_id is used'
@@ -67,7 +67,7 @@ app.post('/signup', (req, res) => {
 
         const nickname = user_id;
 
-        db.run('INSERT INTO users (user_id, password, nickname, comment) VALUES (?, ?, ?, ?',
+        db.run('INSERT INTO users (user_id, password, nickname, comment) VALUES (?, ?, ?, ?'),
             [user_id, password, nickname, ''],
             (err) => {
                 if(err){
